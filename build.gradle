@@ -17,3 +17,19 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+// Configure the JAR task to make it executable
+jar {
+    manifest {
+        attributes(
+                // Correctly specify the fully qualified name of the main class
+                'Main-Class': 'com.damworks.caffeine.Caffeine'
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE // Handle duplicate files in dependencies
+
+    // Include runtime dependencies in the JAR (creates a "fat JAR")
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
