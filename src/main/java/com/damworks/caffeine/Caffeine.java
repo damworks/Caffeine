@@ -1,6 +1,7 @@
 package com.damworks.caffeine;
 
 import java.awt.*;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,20 +16,17 @@ public class Caffeine {
 
     public static void main(String[] args) {
         System.out.println("Starting Caffeine...");
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
         // Initialize the mouse movement task
         try {
             Robot robot = new Robot();
-            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
             // Schedule the mouse movement task at a fixed rate
             scheduler.scheduleAtFixedRate(() -> moveMouse(robot), 0, MOVE_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
-            // Add shutdown hook to gracefully terminate the scheduler
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Shutting down Caffeine...");
-                scheduler.shutdown();
-            }));
+            // Start a thread to listen for a "stop" command
+            listenForExitCommand(scheduler);
 
         } catch (AWTException e) {
             System.err.println("Error initializing the robot: " + e.getMessage());
@@ -57,5 +55,25 @@ public class Caffeine {
         } catch (Exception e) {
             System.err.println("Error moving the mouse: " + e.getMessage());
         }
+    }
+
+    /**
+     * Listens for a "stop" command in the console to safely terminate the program.
+     *
+     * @param scheduler The ScheduledExecutorService used for scheduling tasks.
+     */
+    private static void listenForExitCommand(ScheduledExecutorService scheduler) {
+        new Thread(() -> {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Type 'stop' and press Enter to terminate the program.");
+            while (true) {
+                String input = scanner.nextLine();
+                if ("stop".equalsIgnoreCase(input)) {
+                    System.out.println("Shutting down Caffeine...");
+                    scheduler.shutdown();
+                    System.exit(0);
+                }
+            }
+        }).start();
     }
 }
