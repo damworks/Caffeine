@@ -23,7 +23,7 @@ jar {
     manifest {
         attributes(
                 // Correctly specify the fully qualified name of the main class
-                'Main-Class': 'com.damworks.caffeine.Caffeine'
+                'Main-Class': 'com.damworks.caffeine.core.Caffeine'
         )
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE // Handle duplicate files in dependencies
