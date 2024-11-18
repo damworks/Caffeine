@@ -1,6 +1,8 @@
 package com.damworks.caffeine;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +16,12 @@ public class Caffeine {
     private static final long MOVE_INTERVAL_MS = 120_000; // 2 minutes
 
     public static void main(String[] args) {
+        // Check if SystemTray is supported
+        if (!SystemTray.isSupported()) {
+            System.err.println("System tray is not supported on this system.");
+            return;
+        }
+
         System.out.println("Starting Caffeine...");
 
         // Initialize the mouse movement task
@@ -21,17 +29,14 @@ public class Caffeine {
             Robot robot = new Robot();
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
+            // Initialize and add tray icon
+            setupTrayIcon(scheduler);
+
             // Schedule the mouse movement task at a fixed rate
             scheduler.scheduleAtFixedRate(() -> moveMouse(robot), 0, MOVE_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
-            // Add shutdown hook to gracefully terminate the scheduler
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Shutting down Caffeine...");
-                scheduler.shutdown();
-            }));
-
         } catch (AWTException e) {
-            System.err.println("Error initializing the robot: " + e.getMessage());
+            System.err.println("Error initializing the robot or tray icon: " + e.getMessage());
         }
     }
 
@@ -57,5 +62,45 @@ public class Caffeine {
         } catch (Exception e) {
             System.err.println("Error moving the mouse: " + e.getMessage());
         }
+    }
+
+    /**
+     * Sets up the tray icon for the program.
+     *
+     * @param scheduler The ScheduledExecutorService to shut down when the program exits.
+     */
+    private static void setupTrayIcon(ScheduledExecutorService scheduler) throws AWTException {
+        SystemTray tray = SystemTray.getSystemTray();
+
+        // Load an icon for the tray
+        Image trayIconImage = Toolkit.getDefaultToolkit().createImage("coffee_icon.png");
+        if (trayIconImage == null) {
+            System.err.println("Failed to load tray icon image.");
+            return;
+        }
+
+        // Create a popup menu
+        PopupMenu popup = new PopupMenu();
+
+        // Add an "Exit" menu item
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Shutting down Caffeine...");
+                scheduler.shutdown();
+                tray.remove(tray.getTrayIcons()[0]);
+                System.exit(0);
+            }
+        });
+        popup.add(exitItem);
+
+        // Create the tray icon
+        TrayIcon trayIcon = new TrayIcon(trayIconImage, "Caffeine - Prevent Inactivity", popup);
+        trayIcon.setImageAutoSize(true);
+        trayIcon.addActionListener(e -> trayIcon.displayMessage("Caffeine", "Caffeine is running!", TrayIcon.MessageType.INFO));
+
+        // Add the icon to the system tray
+        tray.add(trayIcon);
     }
 }
