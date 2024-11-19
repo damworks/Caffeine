@@ -16,7 +16,7 @@ Caffeine is a simple utility program that prevents system inactivity by periodic
 ## Development
 - Clone the repository:
 ```bash
-git clone https://github.com/USERNAME/Caffeine.git
+git clone https://github.com/damworks/Caffeine.git
 ```
 - Open the project in IntelliJ IDEA and start coding!
 
